@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/feeds"
 	"net/http"
 )
@@ -32,7 +33,7 @@ func BuildFeeds(c *gin.Context) {
 		Title:       "ECNU ACM 公开比赛",
 		Link:        &feeds.Link{Href: uri},
 		Description: "ECNU ACM 公开比赛",
-		Author:      &feeds.Author{Name: "a180285"},
+		Author:      &feeds.Author{Email: "meowhuang@163.com"},
 	}
 
 	// Find the review items
@@ -46,10 +47,13 @@ func BuildFeeds(c *gin.Context) {
 			title.Text(),
 			s.Find("td:nth-child(2)").Text(),
 			s.Find("td:nth-child(3)").Text())
+
 		feed.Items = append(feed.Items, &feeds.Item{
+			Id:          uuid.NewMD5(uuid.NameSpaceOID, []byte(description)).String(),
 			Title:       title.Text(),
 			Link:        &feeds.Link{Href: host + title.AttrOr("href", "")},
 			Description: description,
+			Content:     description,
 		})
 	})
 
@@ -58,5 +62,6 @@ func BuildFeeds(c *gin.Context) {
 		panic(err)
 	}
 
+	c.Header("Content-Type", "application/xml; charset=utf-8")
 	c.String(200, rss)
 }
